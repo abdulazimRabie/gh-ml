@@ -1,15 +1,22 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import joblib
 import pandas as pd
 import numpy as np
 import shap
 import matplotlib.pyplot as plt
+import os
+import uuid
+from PIL import Image
 import io
-import base64
 
 # Initialize FastAPI app
 app = FastAPI(title="Gaugehaus Real Estate Price Prediction API")
+
+# Mount static directory to serve images
+os.makedirs("static", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Load model, encoders, and dataset
 try:
@@ -121,11 +128,21 @@ async def predict(input_data: RealEstateInput):
             data=input_df.iloc[0],
             feature_names=input_df.columns.tolist()
         ), show=False)
+
+        # Save plot to buffer as PNG
         buf = io.BytesIO()
         plt.savefig(buf, format='png', bbox_inches='tight', dpi=300)
         plt.close()
         buf.seek(0)
-        image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+
+        # Convert PNG (RGBA) to JPEG (RGB)
+        img = Image.open(buf)
+        if img.mode == 'RGBA':
+            img = img.convert('RGB')
+        unique_id = str(uuid.uuid4())
+        jpeg_path = f"static/shap_explanation_{unique_id}.jpeg"
+        img.save(jpeg_path, "JPEG", quality=95)
+        image_url = f"/static/shap_explanation_{unique_id}.jpeg"
 
         # Generate textual description
         description = "Factors influencing the predicted price:\n"
@@ -136,7 +153,7 @@ async def predict(input_data: RealEstateInput):
         # Return prediction and explanations
         return {
             "predicted_price": float(predicted_price),
-            "explanation_image": f"data:image/png;base64,{image_base64}",
+            "image_url": image_url,
             "factors_description": description
         }
     except ValueError as e:

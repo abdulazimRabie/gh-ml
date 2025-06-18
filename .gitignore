@@ -1,3 +1,7 @@
 __pycache__/
 *.env
 *.venv
+
+static/
+*.jpeg
+*.png
