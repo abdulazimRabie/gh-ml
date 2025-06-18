@@ -42,8 +42,8 @@ Follow these steps to set up and run the API locally on Windows, macOS, or Linux
 If you have Git installed, clone the repository:
 
 ```bash
-git clone <repository-url>
-cd <project-directory>
+git clone git@github.com:abdulazimRabie/gh-ml.git
+cd gh-ml
 ```
 
 Alternatively, download the project as a ZIP file and extract it to a folder.
@@ -99,6 +99,10 @@ Start the FastAPI server using Uvicorn:
 
 ```bash
 python app.py
+or
+python3 app.py
+or
+uvicorn app:app --reload
 ```
 
 This runs the API on `http://localhost:8000`. You should see output like:
